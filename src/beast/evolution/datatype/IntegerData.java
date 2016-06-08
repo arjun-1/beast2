@@ -7,12 +7,24 @@ import beast.evolution.datatype.DataType.Base;
 public class IntegerData extends Base {
 
     public IntegerData() {
-        stateCount = -1;
-        mapCodeToStateSet = null;
+    	
+    	int nrOfStates = 15;
+        stateCount = nrOfStates;
+        mapCodeToStateSet = new int[nrOfStates + 1][];
+        for (int i = 0; i < nrOfStates; i++) {
+            mapCodeToStateSet[i] = new int[1];
+            mapCodeToStateSet[i][0] = i;
+        }
+        int[] all = new int[nrOfStates];
+        for (int i = 0; i < nrOfStates; i++) {
+            all[i] = i;
+        }
+        mapCodeToStateSet[nrOfStates] = all;
+
         codeLength = -1;
         codeMap = null;
     }
-
+    
     @Override
     public String getTypeDescription() {
         return "integer";
@@ -20,15 +32,15 @@ public class IntegerData extends Base {
     
     @Override
     public boolean isAmbiguousState(int state) {
-    	return state < 0;
+    	return state == 15;
     }
     
     @Override
     public char getChar(int state) {
-    	if (state < 0) {
+    	if (state == 15) {
     		return '?';
     	}
-        return (char)('0'+state);
+        return (char)('0' + state);
     }
 
 }

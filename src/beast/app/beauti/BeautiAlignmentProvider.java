@@ -65,7 +65,7 @@ public class BeautiAlignmentProvider extends BEASTObject {
         File [] files = beast.app.util.Utils.getLoadFiles("Load Alignment File",
                 new File(Beauti.g_sDir), "Alignment files", "xml", 
                 "fa","fas","fst","fasta","fna","ffn","faa","frn",
-                "nex","nxs","nexus");
+                "nex","nxs","nexus", "csv");
         if (files != null && files.length > 0) {
             return getAlignments(doc, files);
         }
@@ -149,6 +149,11 @@ public class BeautiAlignmentProvider extends BEASTObject {
 					}
 					break;
 
+				case ".csv":				
+					alignment = (Alignment)getCSVData(file);
+					selectedBEASTObjects.add(alignment);
+					break;
+
 				case ".xml":
 					alignment = (Alignment)getXMLData(file);
 					selectedBEASTObjects.add(alignment);
@@ -228,6 +233,126 @@ public class BeautiAlignmentProvider extends BEASTObject {
             }
         );
     }
+
+  private Alignment  getCSVData(File file)	{
+    	try {
+    			// start reading the csv file
+					BufferedReader fin = new BufferedReader(new FileReader(file));
+
+					// the possible datatypes we can parse from the csv
+					String[] choicesDataType = {"integer", "nucleotide"};
+					String datatype = (String) JOptionPane.showInputDialog(
+						null,
+						"Choose DataType (default: integer)",
+						"Choose DataType",
+						JOptionPane.PLAIN_MESSAGE,
+						null,
+						choicesDataType,
+						choicesDataType[0]
+						);
+
+					// if the user clicks 'cancel', we go for integer
+					if (datatype == null) {
+						datatype = "integer";
+						// alert the user of our assumption
+						JOptionPane.showMessageDialog(null, "DataType is assumed integer");
+					}
+
+					// default choice for iMin
+					int iMin = 0;
+
+					//boolean to check whether user has provided correct input for iMin
+					boolean errorHappend = false;
+					if (datatype == "integer") {
+						do {
+							errorHappend = false;
+							String numberInput = (String) JOptionPane.showInputDialog(
+							null,
+							"Choose integer i_min (default: 0). Must be larger or equal to 0",
+							"Choose i_min",
+							JOptionPane.PLAIN_MESSAGE,
+							null,
+							null,
+							"0"
+							);
+							try {
+								if (numberInput == null) {// if the user clicked cancel
+									numberInput = "0";
+									// alert the user of our assumption
+									JOptionPane.showMessageDialog(null, "i_min is assumed 0");
+								}
+
+								// check whether iMin is an integer
+								iMin = Integer.parseInt(numberInput);
+
+								// iMin must be a positive number
+								if (iMin < 0) {
+									JOptionPane.showMessageDialog(null, "i_min cannot be less than 0", "error", JOptionPane.ERROR_MESSAGE);
+									errorHappend = true;
+								}
+							} catch (NumberFormatException e) {
+								JOptionPane.showMessageDialog(null, "i_min is not an integer", "error", JOptionPane.ERROR_MESSAGE);
+								errorHappend = true;
+							}
+						} while (errorHappend);	//keep asking for iMin if user provided incorrect input
+					}
+		
+	        Alignment m_alignment = new Alignment();
+
+	        while (fin.ready()) {
+	        	String line = fin.readLine();
+	        	if ( line.trim().length() == 0 ) {
+   						continue;  // Skip blank lines
+  					}
+	        	String[] row = line.split(",");
+	        	String currentTaxon = row[0];
+
+						if (currentTaxon == null || currentTaxon.trim().length() == 0) {
+							// check if not null and not only white space
+							fin.close();
+							throw new RuntimeException("Expected taxon defined on first line");
+						}
+	        	StringBuilder sb = new StringBuilder();
+	        	int rowLength = row.length;
+	        	
+	        	for (int i = 1; i < row.length; i++) {
+	        		if (datatype == "integer") {
+	        				int parsedAllel = Integer.parseInt(row[i]);
+	        				if (parsedAllel - iMin < 0) {
+										throw new RuntimeException("Encountered i < i_min");
+									}
+	        				sb.append(parsedAllel - iMin);
+	        				sb.append(",");
+	        		} else if (datatype == "nucleotide") {
+	        			sb.append(row[i]);
+	        		}
+	        	}
+	        	String sequenceData = sb.toString();
+	        	Sequence sequence = new Sequence(currentTaxon, sequenceData);
+	        	
+	        	if (datatype == "integer") {
+	        		sequence.init(15, currentTaxon, sequenceData);
+	        	} else if (datatype == "nucleotide") {
+	        		sequence.init(4, currentTaxon, sequenceData);
+	        	}
+	        	sequence.setID("seq_" + currentTaxon);
+	        	m_alignment.sequenceInput.setValue(sequence, m_alignment);
+	        }
+	        fin.close();
+	        
+	        String ID = file.getName();
+	        ID = ID.substring(0, ID.lastIndexOf('.')).replaceAll("\\..*", "");
+	        m_alignment.setID(ID);
+					m_alignment.dataTypeInput.setValue(datatype, m_alignment);
+	        m_alignment.initAndValidate();
+	        return m_alignment;
+    		
+    	} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Loading of " + file.getName() + " failed: " + e.getMessage());
+    	}
+		return null;
+  }  
 
 	static public BEASTInterface getXMLData(File file) {
 		String xml = "";
