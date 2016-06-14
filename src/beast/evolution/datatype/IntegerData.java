@@ -7,7 +7,10 @@ import beast.evolution.datatype.DataType.Base;
 public class IntegerData extends Base {
 
     public IntegerData() {
-    	
+    	// i - iMin in {0,1,...,iMax = 14 = 15 -1} represents all the possible
+        // states for our repeats. Thus 0,1,...,14 are codes for the states
+        // i - iMin = 0,1,...,14. Furthermore, 15 codes for the ambigiuous 
+        // state: 15 could thus mean any of the 15 states mentioned before.
     	int nrOfStates = 15;
         stateCount = nrOfStates;
         mapCodeToStateSet = new int[nrOfStates + 1][];
