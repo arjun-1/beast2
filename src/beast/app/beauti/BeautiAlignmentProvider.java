@@ -35,6 +35,7 @@ import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.FilteredAlignment;
 import beast.evolution.alignment.Sequence;
 import beast.evolution.datatype.DataType;
+import beast.evolution.datatype.IntegerData;
 import beast.math.distributions.MRCAPrior;
 import beast.util.NexusParser;
 import beast.util.XMLParser;
@@ -236,6 +237,10 @@ public class BeautiAlignmentProvider extends BEASTObject {
 
   private Alignment  getCSVData(File file)	{
     	try {
+    			//Set the number of states to initialize the sequence with.
+    			int nrOfStates = 15;
+    			IntegerData.setNrOfStates(nrOfStates);
+
     			// start reading the csv file
 					BufferedReader fin = new BufferedReader(new FileReader(file));
 
@@ -328,10 +333,10 @@ public class BeautiAlignmentProvider extends BEASTObject {
 	        		}
 	        	}
 	        	String sequenceData = sb.toString();
-	        	Sequence sequence = new Sequence(currentTaxon, sequenceData);
+	        	Sequence sequence = new Sequence();
 	        	
 	        	if (datatype == "integer") {
-	        		sequence.init(15, currentTaxon, sequenceData);
+	        		sequence.init(nrOfStates, currentTaxon, sequenceData);
 	        	} else if (datatype == "nucleotide") {
 	        		sequence.init(4, currentTaxon, sequenceData);
 	        	}
