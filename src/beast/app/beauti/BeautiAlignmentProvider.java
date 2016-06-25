@@ -35,7 +35,7 @@ import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.FilteredAlignment;
 import beast.evolution.alignment.Sequence;
 import beast.evolution.datatype.DataType;
-import beast.evolution.datatype.IntegerData;
+import beast.evolution.datatype.FiniteIntegerData;
 import beast.math.distributions.MRCAPrior;
 import beast.util.NexusParser;
 import beast.util.XMLParser;
@@ -239,13 +239,16 @@ public class BeautiAlignmentProvider extends BEASTObject {
     	try {
     			//Set the number of states to initialize the sequence with.
     			int nrOfStates = 15;
-    			IntegerData.setNrOfStates(nrOfStates);
+    			FiniteIntegerData type = new FiniteIntegerData();
+          type.setInputValue("nrOfStates", nrOfStates);
+        	type.initAndValidate();
+          
 
     			// start reading the csv file
 					BufferedReader fin = new BufferedReader(new FileReader(file));
 
 					// the possible datatypes we can parse from the csv
-					String[] choicesDataType = {"integer", "nucleotide"};
+					String[] choicesDataType = {"finiteinteger", "nucleotide"};
 					String datatype = (String) JOptionPane.showInputDialog(
 						null,
 						"Choose DataType (default: integer)",
@@ -258,7 +261,7 @@ public class BeautiAlignmentProvider extends BEASTObject {
 
 					// if the user clicks 'cancel', we go for integer
 					if (datatype == null) {
-						datatype = "integer";
+						datatype = "finiteinteger";
 						// alert the user of our assumption
 						JOptionPane.showMessageDialog(null, "DataType is assumed integer");
 					}
@@ -268,7 +271,7 @@ public class BeautiAlignmentProvider extends BEASTObject {
 
 					//boolean to check whether user has provided correct input for iMin
 					boolean errorHappend = false;
-					if (datatype == "integer") {
+					if (datatype == "finiteinteger") {
 						do {
 							errorHappend = false;
 							String numberInput = (String) JOptionPane.showInputDialog(
@@ -321,7 +324,7 @@ public class BeautiAlignmentProvider extends BEASTObject {
 	        	int rowLength = row.length;
 	        	
 	        	for (int i = 1; i < row.length; i++) {
-	        		if (datatype == "integer") {
+	        		if (datatype == "finiteinteger") {
 	        				int parsedAllel = Integer.parseInt(row[i]);
 	        				if (parsedAllel - iMin < 0) {
 										throw new RuntimeException("Encountered i < i_min");
@@ -335,7 +338,7 @@ public class BeautiAlignmentProvider extends BEASTObject {
 	        	String sequenceData = sb.toString();
 	        	Sequence sequence = new Sequence();
 	        	
-	        	if (datatype == "integer") {
+	        	if (datatype == "finiteinteger") {
 	        		sequence.init(nrOfStates, currentTaxon, sequenceData);
 	        	} else if (datatype == "nucleotide") {
 	        		sequence.init(4, currentTaxon, sequenceData);
@@ -348,7 +351,13 @@ public class BeautiAlignmentProvider extends BEASTObject {
 	        String ID = file.getName();
 	        ID = ID.substring(0, ID.lastIndexOf('.')).replaceAll("\\..*", "");
 	        m_alignment.setID(ID);
-					m_alignment.dataTypeInput.setValue(datatype, m_alignment);
+
+	        if (datatype == "finiteinteger") {
+	        	m_alignment.setInputValue("userDataType", type);
+	        } else if (datatype == "nucleotide") {
+	        	m_alignment.dataTypeInput.setValue(datatype, m_alignment);
+	        }
+
 	        m_alignment.initAndValidate();
 	        return m_alignment;
     		

@@ -14,8 +14,6 @@ public interface DataType {
     final static public char GAP_CHAR = '-';
     final static public char MISSING_CHAR = '?';
 
-    void setStateCount(int newStateCount);
-
     /**
      * @return number of states for this data type.
      *         Assuming there is a finite number of states, or -1 otherwise.
@@ -116,11 +114,6 @@ public interface DataType {
                     throw new IllegalArgumentException("codeMap and mapCodeToStateSet have incompatible lengths");
                 }
             }
-        }
-
-        @Override
-        public void setStateCount(int newStateCount){
-            stateCount = newStateCount;
         }
 
         @Override
