@@ -238,15 +238,17 @@ public class BeautiAlignmentProvider extends BEASTObject {
   private Alignment  getCSVData(File file)	{
     	try {
     			//Set the number of states to initialize the sequence with.
-    			int nrOfStates = 15;
+    			int min_i = 0;
+    			int max_i = 14;
     			FiniteIntegerData type = new FiniteIntegerData();
-          type.setInputValue("nrOfStates", nrOfStates);
+          type.setInputValue("min_i", min_i);
+          type.setInputValue("max_i", max_i);
         	type.initAndValidate();
           
 
     			// start reading the csv file
 					BufferedReader fin = new BufferedReader(new FileReader(file));
-
+					
 					// the possible datatypes we can parse from the csv
 					String[] choicesDataType = {"finiteinteger", "nucleotide"};
 					String datatype = (String) JOptionPane.showInputDialog(
@@ -266,45 +268,6 @@ public class BeautiAlignmentProvider extends BEASTObject {
 						JOptionPane.showMessageDialog(null, "DataType is assumed integer");
 					}
 
-					// default choice for iMin
-					int iMin = 0;
-
-					//boolean to check whether user has provided correct input for iMin
-					boolean errorHappend = false;
-					if (datatype == "finiteinteger") {
-						do {
-							errorHappend = false;
-							String numberInput = (String) JOptionPane.showInputDialog(
-							null,
-							"Choose integer i_min (default: 0). Must be larger or equal to 0",
-							"Choose i_min",
-							JOptionPane.PLAIN_MESSAGE,
-							null,
-							null,
-							"0"
-							);
-							try {
-								if (numberInput == null) {// if the user clicked cancel
-									numberInput = "0";
-									// alert the user of our assumption
-									JOptionPane.showMessageDialog(null, "i_min is assumed 0");
-								}
-
-								// check whether iMin is an integer
-								iMin = Integer.parseInt(numberInput);
-
-								// iMin must be a positive number
-								if (iMin < 0) {
-									JOptionPane.showMessageDialog(null, "i_min cannot be less than 0", "error", JOptionPane.ERROR_MESSAGE);
-									errorHappend = true;
-								}
-							} catch (NumberFormatException e) {
-								JOptionPane.showMessageDialog(null, "i_min is not an integer", "error", JOptionPane.ERROR_MESSAGE);
-								errorHappend = true;
-							}
-						} while (errorHappend);	//keep asking for iMin if user provided incorrect input
-					}
-		
 	        Alignment m_alignment = new Alignment();
 
 	        while (fin.ready()) {
@@ -326,10 +289,12 @@ public class BeautiAlignmentProvider extends BEASTObject {
 	        	for (int i = 1; i < row.length; i++) {
 	        		if (datatype == "finiteinteger") {
 	        				int parsedAllel = Integer.parseInt(row[i]);
-	        				if (parsedAllel - iMin < 0) {
-										throw new RuntimeException("Encountered i < i_min");
+	        				if (parsedAllel - min_i < 0) {
+										throw new RuntimeException("Encountered i < min_i");
+									} else if (parsedAllel > max_i) {
+										throw new RuntimeException("Encountered i > max_i");
 									}
-	        				sb.append(parsedAllel - iMin);
+	        				sb.append(parsedAllel);
 	        				sb.append(",");
 	        		} else if (datatype == "nucleotide") {
 	        			sb.append(row[i]);
@@ -339,7 +304,7 @@ public class BeautiAlignmentProvider extends BEASTObject {
 	        	Sequence sequence = new Sequence();
 	        	
 	        	if (datatype == "finiteinteger") {
-	        		sequence.init(nrOfStates, currentTaxon, sequenceData);
+	        		sequence.init(max_i - min_i + 1, currentTaxon, sequenceData);
 	        	} else if (datatype == "nucleotide") {
 	        		sequence.init(4, currentTaxon, sequenceData);
 	        	}
