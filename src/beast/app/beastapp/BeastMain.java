@@ -436,6 +436,12 @@ public class BeastMain {
                     "</div></center></div></html>";
 
             consoleApp = new BeastConsoleApp(nameString, aboutString, icon);
+            
+            // ensure error and info information is shown in console
+            // but not warning, debug or trace, since that typically just
+            // results in a lot of clutter
+            Log.err = System.err;
+    		Log.info = System.out;
         }
 
         printTitle();
@@ -634,6 +640,8 @@ public class BeastMain {
                 }
                 Log.info.println();
                 Log.info.println("BEAST has terminated with an error. Please select QUIT from the menu.");
+            } else {
+            	rte.printStackTrace();
             }
             // logger.severe will throw a RTE but we want to keep the console visible
         } catch (XMLParserException e) {
